@@ -17,11 +17,26 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASSWORD}@cluster0.1xqvvcz.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-client.connect(err => {
-    const collection = client.db("test").collection("devices");
-    // perform actions on the collection object
-    client.close();
-});
+async function run() {
+    try {
+        const serviceCollection = client.db('tTravel').collection('services');
+
+
+
+        app.get('/services', async (req, res) => {
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.toArray();
+            res.send(services)
+        })
+
+    }
+    finally {
+
+    }
+
+}
+run().catch(error => console.error(error))
 
 
 
