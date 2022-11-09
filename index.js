@@ -54,7 +54,7 @@ async function run() {
             res.send(result)
         })
         //review API --all reviews
-        app.get('/reviews', async (req, res) => {
+        app.get('/reviewsServiceName', async (req, res) => {
             // console.log(req.query)
             let query = {}
             if (req.query.serviceName) {
