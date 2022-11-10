@@ -99,7 +99,10 @@ async function run() {
                     serviceName: req.query.serviceName
                 }
             }
-            const cursor = reviewCollection.find(query);
+            const options = {
+                sort: { client: -1 },
+            };
+            const cursor = reviewCollection.find(query, options);
             const reviews = await cursor.toArray();
             res.send(reviews);
         })
