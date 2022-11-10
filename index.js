@@ -2,8 +2,10 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
+
 
 
 
@@ -17,12 +19,37 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASSWORD}@cluster0.1xqvvcz.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unAuthorized Access' })
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(401).send({ message: 'unAuthorized Access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
+
 async function run() {
     try {
         const serviceCollection = client.db('tTravel').collection('services');
         const reviewCollection = client.db('tTravel').collection('reviews');
 
 
+
+        //JWT
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            console.log(user)
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '7d' })
+            res.send({ token })
+        })
 
 
         app.get('/services', async (req, res) => {
@@ -79,8 +106,12 @@ async function run() {
 
 
         //reviews get
-        app.get('/reviews', async (req, res) => {
-            // console.log(req.query)
+        app.get('/reviews', verifyJWT, async (req, res) => {
+            const decoded = req.decoded;
+            console.log('-----inside review-----', decoded);
+            if (decoded.email !== req.query.email) {
+                res.status(403).send({ message: 'unAuthorized Access' })
+            }
             let query = {}
             if (req.query.email) {
                 query = {
